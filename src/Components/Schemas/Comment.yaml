@@ -1,0 +1,28 @@
+components:
+  schemas:
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        author:
+          type: string
+          maxLength: 255
+        publishedAt:
+          type: string
+          format: date
+        text:
+          type: string
+          maxLength: 5000
+      required:
+        - id
+        - author
+        - publishedAt
+        - text
+      example:
+        id: 6
+        author: Romain
+        publishedAt: 2020-09-15
+        text: test

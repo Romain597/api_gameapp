@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: Sample API
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  version: 0.1.9
+servers:
+  - url: https://localhost:8000/
+    description: localhost dev
+paths:
+  /games:
+    get:
+      summary: Return a list of games
+      description: The complete list of games stored
+      tags:
+        - Games
+      operationId: getGamesByPage
+      parameters:
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+          required: false
+          description: The pagination number of the games list
+          exemple: asc
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: The pagination number of the games list
+          exemple: 5
+      responses:
+        '200':
+          description: A JSON array of game object entity
+          content:
+            application/json:
+              shema:
+                type: array
+                items:
+                  $ref: '#/Components/Schemas/Game'
+  /game/{id}:
+    summary: Represents a game
+    description: >
+      This resource represents an individual game in the system.
+      Each game is identified by a numeric `id`.
+    get:
+      tags:
+        - Game
+      summary: Get a game by ID.
+      description: Display a game
+      operationId: getGameById
+      parameters:
+        - name: id
+          in: path
+          description: Game ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+          exemple: 2
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/Components/Schemas/Game'
+      put:
+        summary: Update a Game object
+        requestBody:
+          content:
+            application/json:
+                schema:
+                  $ref: '#/Components/Schemas/Game'
+  /game/{id}/comments:
+    summary: Represents the comments of a game
+    description: >
+      This resource represents the comments of an individual game in the system.
+      Each game is identified by a numeric `id`.
+    get:
+      tags:
+        - Comments
+      summary: Get the comments of a game by ID.
+      description: Display the comments of a game
+      operationId: getCommentsByGameIdAndPage
+      parameters:
+        - in: path
+          name: id
+          description: Game ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+          exemple: 8
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+          required: false
+          description: The pagination number of the games list
+          exemple: asc
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: The pagination number of the games list
+          exemple: 5
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              shema:
+                type: array
+                items:
+                  $ref: '#/Components/Schemas/Comment'

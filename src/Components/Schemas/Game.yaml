@@ -1,0 +1,41 @@
+components:
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        releasedAt:
+          type: string
+          format: date
+        studios:
+          type: array
+          items:
+            $ref: '#/Components/Schemas/Studio'
+        categories:
+          type: array
+          items:
+            $ref: '#/Components/Schemas/Category'
+        posterFile:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 5000
+        comments:
+          type: array
+          items:
+            $ref: '#/Components/Schemas/Comment'
+      required:
+        - id
+        - name
+      example:
+        id: 1
+        name: jeux un
+        releasedAt: 2020-10-02
+        posterFile: poster-jeux.png
