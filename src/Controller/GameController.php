@@ -22,8 +22,8 @@ class GameController extends AbstractController
      */
     public function gameView( int $gameId , GameRepository $GameRepository ) : Response
     {
-        $test = $GameRepository->find($gameId);
-        dd($test->getStudios());
+        //$test = $GameRepository->find($gameId);
+        //dd($test->getStudios());
         return $this->json( $GameRepository->find($gameId) );
     }
 
