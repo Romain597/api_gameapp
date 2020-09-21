@@ -22,13 +22,9 @@ class GameController extends AbstractController
      */
     public function gameView( int $gameId , GameRepository $GameRepository ) : Response
     {
+        $test = $GameRepository->find($gameId);
+        dd($test->getStudios());
         return $this->json( $GameRepository->find($gameId) );
-                //$ob=$GameRepository->find($gameId);
-                //return new Response( dump( $ob->getCategories()->toArray() ) );
-                //return new Response( dump( $ob->getCategories()->isEmpty() ) );
-                //return new Response( dump( $ob->getStudios()->current() ) );
-                //return new Response( dump( $ob->getCategories()->offsetGet(0) ) );
-
     }
 
 }

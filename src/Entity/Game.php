@@ -44,18 +44,18 @@ class Game implements \JsonSerializable
     private $description;
 
     /**
-     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="game", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="game", orphanRemoval=true, fetch="EAGER")
      */
     private $comments;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Category::class, inversedBy="games")
+     * @ORM\ManyToMany(targetEntity=Category::class, inversedBy="games", fetch="EAGER")
      * @ORM\JoinTable(name="game_category")
      */
     private $categories;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Studio::class, inversedBy="games")
+     * @ORM\ManyToMany(targetEntity=Studio::class, inversedBy="games", fetch="EAGER")
      * @ORM\JoinTable(name="game_studio")
      */
     private $studios;
