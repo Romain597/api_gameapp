@@ -7,6 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
+use App\Entity\Studio;
+use App\Entity\Comment;
+use App\Entity\Category;
+
 /**
  * @ORM\Entity(repositoryClass=GameRepository::class)
  */
@@ -46,11 +50,13 @@ class Game implements \JsonSerializable
 
     /**
      * @ORM\ManyToMany(targetEntity=Category::class, inversedBy="games")
+     * @ORM\JoinTable(name="game_category")
      */
     private $categories;
 
     /**
      * @ORM\ManyToMany(targetEntity=Studio::class, inversedBy="games")
+     * @ORM\JoinTable(name="game_studio")
      */
     private $studios;
 
@@ -197,18 +203,18 @@ class Game implements \JsonSerializable
         return $this;
     }
 
-    public function jsonSerialize() : mixed
+    public function jsonSerialize()
     {
         return (
             [
-                "id" => $this.getId(),
-                "name" => $this.getName(),
-                "posterFile" => $this.getPosterFile(),
-                "description" => $this.getDescription(),
-                "releasedAt" => $this.getReleasedAt(),
-                "comments" => $this.getComments(),
-                "studios" => $this.getStudios(),
-                "categories" => $this.getCategories()
+                "id" => $this->getId(),
+                "name" => $this->getName(),
+                "posterFile" => $this->getPosterFile(),
+                "description" => $this->getDescription(),
+                "releasedAt" => $this->getReleasedAt(),
+                "comments" => $this->getComments(),
+                "studios" => $this->getStudios(),
+                "categories" => $this->getCategories()
             ]
         );
     }

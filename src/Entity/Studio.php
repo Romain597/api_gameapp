@@ -83,9 +83,8 @@ class Studio implements \JsonSerializable
     {
         return (
             [
-                "id" => $this.getId(),
-                "name" => $this.getName(),
-                "games" => $this.getGames()
+                "id" => $this->getId(),
+                "name" => $this->getName()
             ]
         );
     }

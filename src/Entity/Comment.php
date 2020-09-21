@@ -34,7 +34,7 @@ class Comment implements \JsonSerializable
 
     /**
      * @ORM\ManyToOne(targetEntity=Game::class, inversedBy="comments")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(name="game_id", referencedColumnName="id", nullable=false)
      */
     private $game;
 
@@ -95,11 +95,10 @@ class Comment implements \JsonSerializable
     {
         return (
             [
-                "id" => $this.getId(),
-                "author" => $this.getAuthor(),
-                "publishedAt" => $this.getPublishedAt(),
-                "text" => $this.getText(),
-                "game" => $this.getGame()
+                "id" => $this->getId(),
+                "author" => $this->getAuthor(),
+                "publishedAt" => $this->getPublishedAt(),
+                "text" => $this->getText()
             ]
         );
     }
