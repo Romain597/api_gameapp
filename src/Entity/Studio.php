@@ -25,7 +25,9 @@ class Studio implements \JsonSerializable
     private $name;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Game::class, mappedBy="studios")
+     * @ORM\ManyToMany(targetEntity=Game::class, inversedBy="studios")
+     * @ORM\JoinTable(name="game_studio")
+     * @ORM\OrderBy({"name" = "ASC"})
      */
     private $games;
 
@@ -63,7 +65,6 @@ class Studio implements \JsonSerializable
     {
         if (!$this->games->contains($game)) {
             $this->games[] = $game;
-            $game->addStudio($this);
         }
 
         return $this;
@@ -73,13 +74,12 @@ class Studio implements \JsonSerializable
     {
         if ($this->games->contains($game)) {
             $this->games->removeElement($game);
-            $game->removeStudio($this);
         }
 
         return $this;
     }
-
-    public function jsonSerialize() : mixed
+    
+    public function jsonSerialize()
     {
         return (
             [
@@ -88,4 +88,5 @@ class Studio implements \JsonSerializable
             ]
         );
     }
+
 }

@@ -91,7 +91,7 @@ class Comment implements \JsonSerializable
         return $this;
     }
 
-    public function jsonSerialize() : mixed
+    public function jsonSerialize()
     {
         return (
             [

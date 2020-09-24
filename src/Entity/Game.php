@@ -44,19 +44,20 @@ class Game implements \JsonSerializable
     private $description;
 
     /**
-     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="game", orphanRemoval=true, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="game", orphanRemoval=true)
+     * @ORM\OrderBy({"publishedAt" = "DESC"})
      */
     private $comments;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Category::class, inversedBy="games", fetch="EAGER")
-     * @ORM\JoinTable(name="game_category")
+     * @ORM\ManyToMany(targetEntity=Category::class, mappedBy="games")
+     * @ORM\OrderBy({"name" = "ASC"})
      */
     private $categories;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Studio::class, inversedBy="games", fetch="EAGER")
-     * @ORM\JoinTable(name="game_studio")
+     * @ORM\ManyToMany(targetEntity=Studio::class, mappedBy="games")
+     * @ORM\OrderBy({"name" = "ASC"})
      */
     private $studios;
 
@@ -163,6 +164,7 @@ class Game implements \JsonSerializable
     {
         if (!$this->categories->contains($category)) {
             $this->categories[] = $category;
+            $category->addGame($this);
         }
 
         return $this;
@@ -172,6 +174,7 @@ class Game implements \JsonSerializable
     {
         if ($this->categories->contains($category)) {
             $this->categories->removeElement($category);
+            $category->removeGame($this);
         }
 
         return $this;
@@ -189,6 +192,7 @@ class Game implements \JsonSerializable
     {
         if (!$this->studios->contains($studio)) {
             $this->studios[] = $studio;
+            $studio->addGame($this);
         }
 
         return $this;
@@ -198,6 +202,7 @@ class Game implements \JsonSerializable
     {
         if ($this->studios->contains($studio)) {
             $this->studios->removeElement($studio);
+            $studio->removeGame($this);
         }
 
         return $this;
@@ -212,10 +217,11 @@ class Game implements \JsonSerializable
                 "posterFile" => $this->getPosterFile(),
                 "description" => $this->getDescription(),
                 "releasedAt" => $this->getReleasedAt(),
-                "comments" => $this->getComments(),
-                "studios" => $this->getStudios(),
-                "categories" => $this->getCategories()
+                "comments" => $this->getComments()->toArray(),
+                "studios" => $this->getStudios()->toArray(),
+                "categories" => $this->getCategories()->toArray()
             ]
         );
     }
+    
 }

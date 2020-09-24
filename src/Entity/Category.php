@@ -25,7 +25,9 @@ class Category implements \JsonSerializable
     private $name;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Game::class, mappedBy="categories")
+     * @ORM\ManyToMany(targetEntity=Game::class, inversedBy="categories")
+     * @ORM\JoinTable(name="game_category")
+     * @ORM\OrderBy({"name" = "ASC"})
      */
     private $games;
 
@@ -63,7 +65,6 @@ class Category implements \JsonSerializable
     {
         if (!$this->games->contains($game)) {
             $this->games[] = $game;
-            $game->addCategory($this);
         }
 
         return $this;
@@ -73,13 +74,12 @@ class Category implements \JsonSerializable
     {
         if ($this->games->contains($game)) {
             $this->games->removeElement($game);
-            $game->removeCategory($this);
         }
 
         return $this;
     }
 
-    public function jsonSerialize() : mixed
+    public function jsonSerialize()
     {
         return (
             [
@@ -88,4 +88,5 @@ class Category implements \JsonSerializable
             ]
         );
     }
+
 }
