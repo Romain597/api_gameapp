@@ -19,6 +19,30 @@ class GameRepository extends ServiceEntityRepository
         parent::__construct($registry, Game::class);
     }
 
+    /**
+     * @return int Return the number of Game objects
+    */
+    public function countAllGame()
+    {
+        return $this->createQueryBuilder('g')
+            ->select('COUNT(g.id) as nbRow')
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
+    }
+
+    /**
+     * @return Game[] Returns an array of Game objects by the select category
+    */
+    public function findByCategoryId( int $categoryId )
+    {
+        return $this->createQueryBuilder('g')
+            ->select('COUNT(g.id) as nbRow')
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
+    }
+
     // /**
     //  * @return Game[] Returns an array of Game objects
     //  */

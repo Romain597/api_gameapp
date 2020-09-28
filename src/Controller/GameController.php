@@ -14,14 +14,18 @@ use App\Entity\Game;
 
 class GameController extends AbstractController
 {
-    
+    /**
+     * @var int Limit number of games display in a page
+     */
+    private $gamesListPageLimitNb = 6;
+
     //  /game/{commentGameId}/comment/{commentAuthor}/{commentPublishedDate}/{commentText}
     //  /game/{commentGameId}/comment
     //   /game/comment
     /**
      * @Route("/game/comment", name="commentAdd")
     */
-    public function createComment( ValidatorInterface $validator , GameRepository $GameRepository , Request $request ) : Response
+    public function createComment( ValidatorInterface $validator , GameRepository $gameRepository , Request $request ) : Response
     { // EntityManagerInterface $entityManager   ...$parameters    , $commentGameId, $commentAuthor , $commentPublishedDate , $commentText 
         //dd($commentGameId , $commentAuthor , $commentPublishedDate , $commentText);
         // In function call : decomposition input datas in a array named parameters
@@ -93,7 +97,7 @@ class GameController extends AbstractController
         $commentGame = null;
         $commentGameId = filter_var($commentGameId, FILTER_VALIDATE_INT, array('options' => array( 'min_range' => 0 )));
         if( $commentGameId !== false ) {
-            $commentGame = $GameRepository->find($commentGameId);
+            $commentGame = $gameRepository->find($commentGameId);
             if( ($commentGame instanceof \Game) === true ) {
                 $comment->setGame($commentGame);
             }
@@ -126,31 +130,179 @@ class GameController extends AbstractController
     /**
      * @Route("/game/{gameId}", name="gameView")
      */
-    public function gameView(GameRepository $GameRepository , int $gameId ) : Response
+    public function gameView(GameRepository $gameRepository , int $gameId ) : Response
     {
-        /*$test = $GameRepository->find($gameId);
+        /*$test = $gameRepository->find($gameId);
         dd($test->getStudios());*/
-        /*$game = $GameRepository->find($gameId);
+        /*$game = $gameRepository->find($gameId);
         if( ($game instanceof Game) === false ) {
             $game = "";
         }
         return $this->json( $game );*/
-        return $this->json( $GameRepository->find($gameId) );
+        return $this->json( $gameRepository->find($gameId) );
+    }
+
+    /**
+     * @Route("/games/count", name="gamesCount")
+     */
+    public function gamesCount(GameRepository $gameRepository ) : Response
+    {
+        $count = intval($gameRepository->countAllGame(), 10);
+        return new Response($count);
+        //return $this->json( $count );
+    }
+
+    /**
+     * @Route("/games/by-categories", name="gamesByCategories")
+     */
+    public function gamesByCategories( GameRepository $gameRepository , Request $request ) : Response
+    {
+        $category = 1;
+        $order = "ASC";
+        $page = 1;
+        $sortField = 'name';
+        //
+        //$categoryId = $request->query->get("category",null);
+        /*$category = "";
+        $fieldParam = $request->query->get("field","");
+        $sortField = '';
+        switch($fieldParam) {
+            case 'released':
+                $sortField = 'releasedAt';
+            break;
+            case 'name':
+                $sortField = 'name';
+            break;
+        }
+        $order = mb_strtoupper($request->query->get("order","ASC"));
+        $page = $request->query->get("page",1);*/
+        $pageCount = intval($gameRepository->countAllGame(), 10);
+        $limit = $this->gamesListPageLimitNb;
+        $offset = ($limit * $page) - $limit;
+        $pageMax =  ceil($pageCount / $limit);
+        $orderByCond = [];
+        if( trim($sortField) != "" ) {
+            $orderByCond = [$sortField => $order];
+        }
+        if( $page > 0 && $page <= $pageMax ) {
+            $games = $gameRepository->findByCategoryId(
+                $category,
+                $orderByCond,
+                $limit,
+                $offset
+            );
+            /*$games = $gameRepository->findBy(
+                ['categories' => $category],
+                $orderByCond,
+                $limit,
+                $offset
+            );*/
+        } else {
+            $games = $gameRepository->findBy(
+                ['categories' => $category],
+                $orderByCond
+            );
+        }
+        if( gettype($games) !== "array" ) {
+            $games = [];
+        }
+        return $this->json( $games );
+    }
+
+    /**
+     * @Route("/games/sort-by-released-date", name="gamesListByReleasedDate")
+     */
+    public function gamesListByReleasedDate( GameRepository $gameRepository , Request $request ) : Response
+    {
+        $sortField = 'releasedAt';
+        $order = mb_strtoupper($request->query->get("order","ASC"));
+        $pageCount = intval($gameRepository->countAllGame(), 10);
+        $page = $request->query->get("page",1);
+        $limit = $this->gamesListPageLimitNb;
+        $offset = ($limit * $page) - $limit;
+        $pageMax =  ceil($pageCount / $limit);
+        if( $page > 0 && $page <= $pageMax ) {
+            $games = $gameRepository->findBy(
+                [],
+                [$sortField => $order],
+                $limit,
+                $offset
+            );
+        } else {
+            $games = $gameRepository->findAll();
+        }
+        if( gettype($games) !== "array" ) {
+            $games = [];
+        }
+        return $this->json( $games );
+        //return $this->json( $gameRepository->findAll() );
+    }
+
+    /**
+     * @Route("/games/sort-by-name", name="gamesListByName")
+     */
+    public function gamesListByName( GameRepository $gameRepository , Request $request ) : Response
+    {
+        $sortField = 'name';
+        $order = mb_strtoupper($request->query->get("order","ASC"));
+        $pageCount = intval($gameRepository->countAllGame(), 10);
+        $page = $request->query->get("page",1);
+        $limit = $this->gamesListPageLimitNb;
+        $offset = ($limit * $page) - $limit;
+        $pageMax =  ceil($pageCount / $limit);
+        if( $page > 0 && $page <= $pageMax ) {
+            $games = $gameRepository->findBy(
+                [],
+                [$sortField => $order],
+                $limit,
+                $offset
+            );
+        } else {
+            $games = $gameRepository->findAll();
+        }
+        if( gettype($games) !== "array" ) {
+            $games = [];
+        }
+        return $this->json( $games );
+        //return $this->json( $gameRepository->findAll() );
     }
 
     /**
      * @Route("/games", name="gamesList")
      */
-    public function gamesList( GameRepository $GameRepository ) : Response
+    public function gamesList( GameRepository $gameRepository , Request $request ) : Response
     {
-        /*$test = $GameRepository->findAll();
-        dd($test);*/
-        /*$games = $GameRepository->findAll();
+        /*$testRe = [
+            "server" => $request->server->all(),
+            "files" => $request->files->all(),
+            "attributes" => $request->attributes->all(),
+            "cookies" => $request->cookies->all(),
+            "query" => $request->query->all(),
+            "headers" => $request->headers->all(),
+            "request" => $request->request->all()
+        ];
+        return new Response('Success : < '.serialize($testRe["query"]).' >');*/
+        //
+        $pageCount = intval($gameRepository->countAllGame(), 10);
+        $page = $request->query->get("page",1);
+        $limit = $this->gamesListPageLimitNb;
+        $offset = ($limit * $page) - $limit;
+        $pageMax =  ceil($pageCount / $limit);
+        if( $page > 0 && $page <= $pageMax ) {
+            $games = $gameRepository->findBy(
+                [],
+                [],
+                $limit,
+                $offset
+            );
+        } else {
+            $games = $gameRepository->findAll();
+        }
         if( gettype($games) !== "array" ) {
             $games = [];
         }
-        return $this->json( $games );*/
-        return $this->json( $GameRepository->findAll() );
+        return $this->json( $games );
+        //return $this->json( $gameRepository->findAll() );
     }
 
 }
