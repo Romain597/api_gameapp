@@ -330,4 +330,52 @@ class GameController extends AbstractController
         //return $this->json( $gameRepository->findAll() );
     }
 
+    /**
+     * @Route("/games-by-letter", name="gamesByLetter")
+     */
+    public function getGamesByLetter( GameRepository $gameRepository , Request $request ) : Response
+    {
+        $games = [];
+
+        $letterString = $request->query->get("letter",null);
+        
+        if( $letterString !== null && is_string( $letterString ) === true && !is_numeric( $letterString ) === true && strlen($letterString) === 1 ) {
+            $letterString = strtolower($letterString);
+            $games = $gameRepository->findByFirstLetterName(
+                $letterString,
+                "name",
+                "ASC"
+            );
+        }
+
+        if( gettype($games) !== "array" ) {
+            $games = [];
+        }
+
+        $jsonReady = [];
+
+        if( count($games) > 0 ) {
+
+            foreach( $games as $game ) {
+                
+                $gameData = $game->jsonSerialize();
+                unset($gameData["comments"]);
+                $jsonReady[] = $gameData;
+
+            }
+
+        }
+
+        return $this->json( $jsonReady );
+    }
+
+    /**
+     * @Route("/games-count-by-letter", name="gamesCountByLetter")
+     */
+    public function getGamesCountByLetter( GameRepository $gameRepository ) : Response
+    {
+        $datas = $gameRepository->findAlphabeticListOfGamesRelatedCounter();
+        return $this->json( $datas );
+    }
+
 }

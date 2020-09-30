@@ -25,20 +25,21 @@ class CategoryRepository extends ServiceEntityRepository
     public function findByFirstLetterName($letter, $orderField , $orderValue)
     {
         if( preg_match('/[a-zA-Z]/i', $letter) === 1 ) {
-            return $this->createQueryBuilder('s')
-                ->andWhere('LOWER(s.name) LIKE :val')
+            return $this->createQueryBuilder('c')
+                ->andWhere('LOWER(c.name) LIKE :val')
                 ->setParameter('val', $letter.'%')
-                ->orderBy( 's.'.$orderField, strtoupper($orderValue) )
+                ->orderBy( 'c.'.$orderField, strtoupper($orderValue) )
                 ->getQuery()
                 ->getResult()
             ;
         } else {
-            return $this->createQueryBuilder('s')
+            /*return $this->createQueryBuilder('c')
                 ->andWhere('COALESCE(TRIM(s.name),"") = ""')
-                ->orderBy( 's.'.$orderField, strtoupper($orderValue) )
+                ->orderBy( 'c.'.$orderField, strtoupper($orderValue) )
                 ->getQuery()
                 ->getResult()
-            ;
+            ;*/
+            return [];
         }
     }
 

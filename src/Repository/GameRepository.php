@@ -32,21 +32,49 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Game[] Returns an array of Game objects by the select category
+    * @return Game[] Returns an array of Game objects
     */
-    /*public function findByCategoryId( int $categoryId , $orderBy = [], $limit = null, $offset = null )
+    public function findByFirstLetterName($letter, $orderField , $orderValue)
     {
-        return $this->createQueryBuilder('g')
-            ->innerJoin('a.categories', 'c')
-            ->andWhere('g.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.datePublication', 'DESC')
-            ->setFirstResult(0)
-            ->setMaxResults(5)
-            ->getQuery()
-            ->getResult()
-        ;
-    }*/
+        if( preg_match('/[a-zA-Z]/i', $letter) === 1 ) {
+            return $this->createQueryBuilder('g')
+                ->andWhere('LOWER(g.name) LIKE :val')
+                ->setParameter('val', $letter.'%')
+                ->orderBy( 'g.'.$orderField, strtoupper($orderValue) )
+                ->getQuery()
+                ->getResult()
+            ;
+        } else {
+            /*return $this->createQueryBuilder('g')
+                ->andWhere('COALESCE(TRIM(g.name),"") = ""')
+                ->orderBy( 'g.'.$orderField, strtoupper($orderValue) )
+                ->getQuery()
+                ->getResult()
+            ;*/
+            return [];
+        }
+    }
+
+    /**
+    * @return Array[<int>,<Array>] Returns an array of agregate <game group by first letter> and <games count for this first letter>
+    */
+    public function findAlphabeticListOfGamesRelatedCounter()
+    {
+
+        $connection = $this->getEntityManager()
+            ->getConnection();
+        $sql = '
+            SELECT LOWER(LEFT( g.name , 1 )) AS first_letter , 
+                SUM( 1 ) AS games_count 
+            FROM game g
+            GROUP BY first_letter 
+            ORDER BY first_letter ASC
+            ';
+        $stmt = $connection->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+
+    }
 
     // /**
     //  * @return Game[] Returns an array of Game objects

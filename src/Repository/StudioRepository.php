@@ -33,12 +33,13 @@ class StudioRepository extends ServiceEntityRepository
                 ->getResult()
             ;
         } else {
-            return $this->createQueryBuilder('s')
+            /*return $this->createQueryBuilder('s')
                 ->andWhere('COALESCE(TRIM(s.name),"") = ""')
                 ->orderBy( 's.'.$orderField, strtoupper($orderValue) )
                 ->getQuery()
                 ->getResult()
-            ;
+            ;*/
+            return [];
         }
     }
 
