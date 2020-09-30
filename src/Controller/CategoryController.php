@@ -43,7 +43,9 @@ class CategoryController extends AbstractController
     public function getCategoriesByLetter( CategoryRepository $categoryRepository , Request $request ) : Response
     {
         $categories = [];
+
         $letterString = $request->query->get("letter",null);
+
         if( $letterString !== null && is_string( $letterString ) === true && !is_numeric( $letterString ) === true && strlen($letterString) === 1 ) {
             $letterString = strtolower($letterString);
             $categories = $categoryRepository->findByFirstLetterName(
@@ -52,10 +54,43 @@ class CategoryController extends AbstractController
                 "ASC"
             );
         }
+
         if( gettype($categories) !== "array" ) {
             $categories = [];
         }
-        return $this->json( $categories );
+
+        $jsonReady = [];
+
+        if( count($categories) > 0 ) {
+
+            foreach( $categories as $category ) {
+                
+                $categoryData = $category->jsonSerialize();
+                $categoryData = $categoryData + ["games"=>[]];
+                $games = $category->getGames()->toArray();
+
+                foreach( $games as $game ) {
+                    $gameData = $game->jsonSerialize();
+                    unset($gameData["comments"]);
+                    $categoryData["games"][] = $gameData;
+                }
+
+                $jsonReady[] = $categoryData;
+
+            }
+
+        }
+
+        return $this->json( $jsonReady );
+    }
+
+    /**
+     * @Route("/categories-games-count-by-letter", name="categoriesGamesCountByLetter")
+     */
+    public function getCategoriesGamesCountByLetter( CategoryRepository $categoryRepository ) : Response
+    {
+        $datas = $categoryRepository->findAlphabeticListOfCategoriesWithGamesRelatedCounter();
+        return $this->json( $datas );
     }
 
 }

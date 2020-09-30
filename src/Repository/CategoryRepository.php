@@ -19,6 +19,50 @@ class CategoryRepository extends ServiceEntityRepository
         parent::__construct($registry, Category::class);
     }
 
+    /**
+    * @return Category[] Returns an array of Category objects
+    */
+    public function findByFirstLetterName($letter, $orderField , $orderValue)
+    {
+        if( preg_match('/[a-zA-Z]/i', $letter) === 1 ) {
+            return $this->createQueryBuilder('s')
+                ->andWhere('LOWER(s.name) LIKE :val')
+                ->setParameter('val', $letter.'%')
+                ->orderBy( 's.'.$orderField, strtoupper($orderValue) )
+                ->getQuery()
+                ->getResult()
+            ;
+        } else {
+            return $this->createQueryBuilder('s')
+                ->andWhere('COALESCE(TRIM(s.name),"") = ""')
+                ->orderBy( 's.'.$orderField, strtoupper($orderValue) )
+                ->getQuery()
+                ->getResult()
+            ;
+        }
+    }
+
+    /**
+    * @return Array[<int>,<Array>] Returns an array of agregate <category group by first letter> and <games count for this first letter>
+    */
+    public function findAlphabeticListOfCategoriesWithGamesRelatedCounter()
+    {
+
+        $connection = $this->getEntityManager()
+            ->getConnection();
+        $sql = '
+            SELECT LOWER(LEFT( c.name , 1 )) AS first_letter , 
+                SUM( (SELECT COUNT(j.game_id) FROM game_category j WHERE j.category_id = c.id) ) AS games_count 
+            FROM category c 
+            GROUP BY first_letter 
+            ORDER BY first_letter ASC
+            ';
+        $stmt = $connection->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+
+    }
+
     // /**
     //  * @return Category[] Returns an array of Category objects
     //  */
