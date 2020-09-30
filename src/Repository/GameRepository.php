@@ -25,7 +25,7 @@ class GameRepository extends ServiceEntityRepository
     public function countAllGame()
     {
         return $this->createQueryBuilder('g')
-            ->select('COUNT(g.id) as nbRow')
+            ->select('COUNT(g.id) AS nbRow')
             ->getQuery()
             ->getSingleScalarResult()
         ;
@@ -34,14 +34,19 @@ class GameRepository extends ServiceEntityRepository
     /**
      * @return Game[] Returns an array of Game objects by the select category
     */
-    public function findByCategoryId( int $categoryId )
+    /*public function findByCategoryId( int $categoryId , $orderBy = [], $limit = null, $offset = null )
     {
         return $this->createQueryBuilder('g')
-            ->select('COUNT(g.id) as nbRow')
+            ->innerJoin('a.categories', 'c')
+            ->andWhere('g.exampleField = :val')
+            ->setParameter('val', $value)
+            ->orderBy('a.datePublication', 'DESC')
+            ->setFirstResult(0)
+            ->setMaxResults(5)
             ->getQuery()
-            ->getSingleScalarResult()
+            ->getResult()
         ;
-    }
+    }*/
 
     // /**
     //  * @return Game[] Returns an array of Game objects

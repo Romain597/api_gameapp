@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\StudioRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -16,11 +18,13 @@ class Studio implements \JsonSerializable
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"list", "classify"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"list", "classify"})
      */
     private $name;
 
@@ -28,6 +32,8 @@ class Studio implements \JsonSerializable
      * @ORM\ManyToMany(targetEntity=Game::class, inversedBy="studios")
      * @ORM\JoinTable(name="game_studio")
      * @ORM\OrderBy({"name" = "ASC"})
+     * @Groups({"classify"})
+     * @MaxDepth(2)
      */
     private $games;
 

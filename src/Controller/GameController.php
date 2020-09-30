@@ -7,6 +7,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\GameRepository;
+use App\Repository\CategoryRepository;
+use App\Repository\StudioRepository;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Comment;
@@ -19,52 +21,16 @@ class GameController extends AbstractController
      */
     private $gamesListPageLimitNb = 6;
 
-    //  /game/{commentGameId}/comment/{commentAuthor}/{commentPublishedDate}/{commentText}
-    //  /game/{commentGameId}/comment
-    //   /game/comment
     /**
      * @Route("/game/comment", name="commentAdd")
     */
     public function createComment( ValidatorInterface $validator , GameRepository $gameRepository , Request $request ) : Response
-    { // EntityManagerInterface $entityManager   ...$parameters    , $commentGameId, $commentAuthor , $commentPublishedDate , $commentText 
-        //dd($commentGameId , $commentAuthor , $commentPublishedDate , $commentText);
-        // In function call : decomposition input datas in a array named parameters
-        // get variables passed by parameters array
-        //list('gameId' => $commentGameId, 'author' => $commentAuthor, 'publishedDate' => $commentPublishedDate, 'comment' => $commentText) = $parameters;
-        //$request = Request::createFromGlobals();
+    {
+        // get request parameters
         $commentGameId = $request->request->get("gameId",null);
         $commentAuthor = $request->request->get("author",null);
         $commentPublishedDate = $request->request->get("publishedDate",null);
         $commentText = $request->request->get("comment",null);
-        //$routeName = $request->attributes->get('_route');
-        //$routeParameters = $request->attributes->get('_route_params');
-        // use this to get all the available attributes (not only routing ones):
-        //$allAttributes = $request->attributes->all();
-        // test
-        /*$testRe = [
-            "server" => $request->server->all(),
-            "files" => $request->files->all(),
-            "attributes" => $request->attributes->all(),
-            "cookies" => $request->cookies->all(),
-            "query" => $request->query->all(),
-            "headers" => $request->headers->all(),
-            "request" => $request->request->all()
-        ];*/
-        /*$commentGameId = 2;
-        $commentAuthor = "Romain";
-        $commentPublishedDate = "2020_09_24_12_10_0";
-        $commentText = "Super jeux de stratégie";*/
-        //return new Response('Success : < '.serialize($testRe).' >');
-        //return new Response('Success : < '.serialize($request->server->all()).' > < '.serialize($request->files->all()).' > < '.serialize($request->attributes->all()).' > < '.serialize($request->cookies->all()).' > < '.serialize($request->query->all()).' > < '.serialize($request->headers->all()).' > < '.serialize($request->request->all()).' >');
-        //return new Response('Success : <'.$commentGameId.'><'.$commentAuthor.'><'.$commentPublishedDate.'><'.$commentText.'>');
-        /*$response = new Response();
-        $response->setContent('Success : <'.$commentGameId.'>'.'<'.$commentAuthor.'>'.'<'.$commentPublishedDate.'>'.'<'.$commentText.'>');
-        $response->setStatusCode(Response::HTTP_OK);
-        // sets a HTTP response header
-        $response->headers->set('Content-Type', 'text/html');
-        // prints the HTTP headers followed by the content
-        return $response->send();
-        //dd($commentGameId , $commentAuthor , $commentPublishedDate , $commentText);*/
         // create a new object Comment
         $comment = new Comment();
         // comment author
@@ -73,7 +39,6 @@ class GameController extends AbstractController
             $comment->setAuthor(trim($commentAuthor));
         }
         // comment add date
-        //  /^2\d{3}\_\d{1,2}\_\d{1,2}\_\d{1,2}\_\d{1,2}\_\d{1,2}$/
         if( preg_match('/^2\d{3}\_[0-1]*\d\_[0-3]*\d\_[0-2]*\d\_[0-5]*\d\_[0-5]*\d$/',$commentPublishedDate) === 1 ) {
             $publishedDateArray = explode("_",$commentPublishedDate);
             $publishedDate = new \DateTime("now", new \DateTimeZone("UTC"));
@@ -102,7 +67,6 @@ class GameController extends AbstractController
                 $comment->setGame($commentGame);
             }
         }
-        //dd(get_class($commentGame));
         // validation
         $errors = $validator->validate($comment);
         if(count($errors) > 0) {
@@ -115,7 +79,7 @@ class GameController extends AbstractController
             if( ($commentGame instanceof Game) === true ) {
                 $commentGame->addComment($comment);
             }
-            // create entity manager
+            // create entity manager ( ou via param EntityManagerInterface $entityManager )
             $entityManager = $this->getDoctrine()->getManager();
             // tell Doctrine you want to (eventually) save the Comment (no queries yet)
             $entityManager->persist($comment);
@@ -140,6 +104,7 @@ class GameController extends AbstractController
         }
         return $this->json( $game );*/
         return $this->json( $gameRepository->find($gameId) );
+
     }
 
     /**
@@ -147,7 +112,9 @@ class GameController extends AbstractController
      */
     public function gamesCount(GameRepository $gameRepository ) : Response
     {
+        
         $count = intval($gameRepository->countAllGame(), 10);
+
         return new Response($count);
         //return $this->json( $count );
     }
@@ -155,15 +122,14 @@ class GameController extends AbstractController
     /**
      * @Route("/games/by-categories", name="gamesByCategories")
      */
-    public function gamesByCategories( GameRepository $gameRepository , Request $request ) : Response
+    public function gamesByCategories( GameRepository $gameRepository , CategoryRepository $categoryRepository , Request $request ) : Response
     {
-        $category = 1;
-        $order = "ASC";
-        $page = 1;
+        /*$categoryId = 1;
         $sortField = 'name';
-        //
-        //$categoryId = $request->query->get("category",null);
-        /*$category = "";
+        $order = "ASC";
+        $page = 1;*/
+        $categoryId = $request->query->get("category",null);
+        $category = $categoryRepository->find($categoryId);
         $fieldParam = $request->query->get("field","");
         $sortField = '';
         switch($fieldParam) {
@@ -175,37 +141,109 @@ class GameController extends AbstractController
             break;
         }
         $order = mb_strtoupper($request->query->get("order","ASC"));
-        $page = $request->query->get("page",1);*/
-        $pageCount = intval($gameRepository->countAllGame(), 10);
+        $page = $request->query->get("page",1);
+        // sort
+        $allCategoryGames = $category->getGames()->toArray();
+        $methodName = 'get'.ucfirst($sortField);
+        $result = usort($allCategoryGames, function($a, $b) {
+            global $order;
+            if( $order == "ASC" ) {
+                if( $a->$methodName() === $a->$methodName()  ) {
+                    return 0;
+                }
+                return ( $a->$methodName() < $a->$methodName() ) ? -1 : 1;
+            } else if( $order == "DESC" ) {
+                if( $a->$methodName() === $a->$methodName()  ) {
+                    return 0;
+                }
+                return ( $a->$methodName() > $a->$methodName() ) ? -1 : 1;
+            }
+        });
+        $gameCount = count($allCategoryGames);
         $limit = $this->gamesListPageLimitNb;
-        $offset = ($limit * $page) - $limit;
-        $pageMax =  ceil($pageCount / $limit);
-        $orderByCond = [];
-        if( trim($sortField) != "" ) {
-            $orderByCond = [$sortField => $order];
-        }
+        $offsetBegin = ($limit * $page) - $limit;
+        $pageMax =  ceil($gameCount / $limit);
+        $offsetEnd = ( ( $offsetBegin + $limit - 1 ) < $gameCount ) ? ( $offsetBegin + $limit - 1 ) : $gameCount ;
         if( $page > 0 && $page <= $pageMax ) {
-            $games = $gameRepository->findByCategoryId(
-                $category,
-                $orderByCond,
-                $limit,
-                $offset
-            );
-            /*$games = $gameRepository->findBy(
-                ['categories' => $category],
-                $orderByCond,
-                $limit,
-                $offset
-            );*/
+            $games = [];
+            for( $i = $offsetBegin; $i <= $offsetEnd; $i++ ) {
+                if( isset( $allCategoryGames[$i] ) === true ) {
+                    $games[] = $allCategoryGames[$i];
+                }
+            }
+
         } else {
-            $games = $gameRepository->findBy(
-                ['categories' => $category],
-                $orderByCond
-            );
+            $games = $allCategoryGames;
         }
+
         if( gettype($games) !== "array" ) {
             $games = [];
         }
+
+        return $this->json( $games );
+    }
+
+    /**
+     * @Route("/games/by-studios", name="gamesByStudios")
+     */
+    public function gamesByStudios( GameRepository $gameRepository , StudioRepository $studioRepository , Request $request ) : Response
+    {
+        /*$studioId = 1;
+        $sortField = 'name';
+        $order = "ASC";
+        $page = 1;*/
+        $studioId = $request->query->get("studio",null);
+        $studio = $studioRepository->find($studioId);
+        $fieldParam = $request->query->get("field","");
+        $sortField = '';
+        switch($fieldParam) {
+            case 'released':
+                $sortField = 'releasedAt';
+            break;
+            case 'name':
+                $sortField = 'name';
+            break;
+        }
+        $order = mb_strtoupper($request->query->get("order","ASC"));
+        $page = $request->query->get("page",1);
+        // sort
+        $allStudioGames = $studio->getGames()->toArray();
+        $methodName = 'get'.ucfirst($sortField);
+        $result = usort($allStudioGames, function($a, $b) {
+            global $order;
+            if( $order == "ASC" ) {
+                if( $a->$methodName() === $a->$methodName()  ) {
+                    return 0;
+                }
+                return ( $a->$methodName() < $a->$methodName() ) ? -1 : 1;
+            } else if( $order == "DESC" ) {
+                if( $a->$methodName() === $a->$methodName()  ) {
+                    return 0;
+                }
+                return ( $a->$methodName() > $a->$methodName() ) ? -1 : 1;
+            }
+        });
+        $gameCount = count($allStudioGames);
+        $limit = $this->gamesListPageLimitNb;
+        $offsetBegin = ($limit * $page) - $limit;
+        $pageMax =  ceil($gameCount / $limit);
+        $offsetEnd = ( ( $offsetBegin + $limit - 1 ) < $gameCount ) ? ( $offsetBegin + $limit - 1 ) : $gameCount ;
+        if( $page > 0 && $page <= $pageMax ) {
+            $games = [];
+            for( $i = $offsetBegin; $i <= $offsetEnd; $i++ ) {
+                if( isset( $allStudioGames[$i] ) === true ) {
+                    $games[] = $allStudioGames[$i];
+                }
+            }
+
+        } else {
+            $games = $allStudioGames;
+        }
+
+        if( gettype($games) !== "array" ) {
+            $games = [];
+        }
+
         return $this->json( $games );
     }
 
@@ -235,7 +273,6 @@ class GameController extends AbstractController
             $games = [];
         }
         return $this->json( $games );
-        //return $this->json( $gameRepository->findAll() );
     }
 
     /**
@@ -264,7 +301,6 @@ class GameController extends AbstractController
             $games = [];
         }
         return $this->json( $games );
-        //return $this->json( $gameRepository->findAll() );
     }
 
     /**
@@ -272,17 +308,6 @@ class GameController extends AbstractController
      */
     public function gamesList( GameRepository $gameRepository , Request $request ) : Response
     {
-        /*$testRe = [
-            "server" => $request->server->all(),
-            "files" => $request->files->all(),
-            "attributes" => $request->attributes->all(),
-            "cookies" => $request->cookies->all(),
-            "query" => $request->query->all(),
-            "headers" => $request->headers->all(),
-            "request" => $request->request->all()
-        ];
-        return new Response('Success : < '.serialize($testRe["query"]).' >');*/
-        //
         $pageCount = intval($gameRepository->countAllGame(), 10);
         $page = $request->query->get("page",1);
         $limit = $this->gamesListPageLimitNb;
